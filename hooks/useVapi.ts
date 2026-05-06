@@ -289,6 +289,12 @@ export function useVapi(book: IBook) {
       // Note: Server-returned maxDurationMinutes is informational only
       // The actual limit is enforced by useLatestRef(limits.maxSessionMinutes * 60)
 
+      if (!ASSISTANT_ID) {
+        setLimitError("Voice assistant is not configured. Please contact support.");
+        setStatus("idle");
+        return;
+      }
+
       const firstMessage = `Hey, good to meet you. Quick question before we dive in - have you actually read ${book.title} yet, or are we starting fresh?`;
 
       await getVapi().start(ASSISTANT_ID, {
