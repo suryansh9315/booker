@@ -1,13 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MicOff, Mic } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
-import { getBookBySlug } from "@/lib/actions/book.actions";
+import { getDocumentBySlug } from "@/lib/actions/document.actions";
 import VapiControls from "@/components/VapiControls";
 
-export default async function BookDetailsPage({
+export default async function DocumentDetailsPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -19,13 +18,13 @@ export default async function BookDetailsPage({
   }
 
   const { slug } = await params;
-  const result = await getBookBySlug(slug);
+  const result = await getDocumentBySlug(slug);
 
   if (!result.success || !result.data) {
     redirect("/");
   }
 
-  const book = result.data;
+  const document = result.data;
 
   return (
     <div className="book-page-container">
@@ -33,7 +32,7 @@ export default async function BookDetailsPage({
         <ArrowLeft className="size-6 text-[#212a3b]" />
       </Link>
 
-      <VapiControls book={book} />
+      <VapiControls document={document} />
     </div>
   );
 }

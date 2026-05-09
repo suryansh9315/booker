@@ -7,11 +7,14 @@ import {
 } from "./constants";
 
 export const UploadSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
-  author: z
+  title: z
     .string()
-    .min(1, "Author name is required")
-    .max(100, "Author name is too long"),
+    .min(1, "Document name is required")
+    .max(100, "Document name is too long"),
+  source: z
+    .string()
+    .min(1, "Source / provider is required")
+    .max(100, "Source name is too long"),
   persona: z.string().min(1, "Please select a voice"),
   pdfFile: z
     .instanceof(File, { message: "PDF file is required" })

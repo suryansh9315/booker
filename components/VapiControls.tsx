@@ -2,7 +2,7 @@
 
 import { Mic, MicOff } from "lucide-react";
 import useVapi from "@/hooks/useVapi";
-import { IBook } from "@/types";
+import { IDocument } from "@/types";
 import Image from "next/image";
 import Transcript from "@/components/Transcript";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const VapiControls = ({ book }: { book: IBook }) => {
+const VapiControls = ({ document }: { document: IDocument }) => {
   const {
     status,
     isActive,
@@ -22,22 +22,17 @@ const VapiControls = ({ book }: { book: IBook }) => {
     stop,
     clearError,
     limitError,
-    isBillingError,
     maxDurationSeconds,
-  } = useVapi(book);
+  } = useVapi(document);
   const router = useRouter();
 
   useEffect(() => {
     if (limitError) {
       toast.error(limitError);
-      if (isBillingError) {
-        router.push("/subscriptions");
-      } else {
-        router.push("/");
-      }
+      router.push("/");
       clearError();
     }
-  }, [isBillingError, limitError, router, clearError]);
+  }, [limitError, router, clearError]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -70,8 +65,8 @@ const VapiControls = ({ book }: { book: IBook }) => {
       <div className="vapi-header-card">
         <div className="vapi-cover-wrapper">
           <Image
-            src={book.coverURL || "/images/book-placeholder.png"}
-            alt={book.title}
+            src={document.coverURL || "/images/book-placeholder.png"}
+            alt={document.title}
             width={120}
             height={180}
             className="vapi-cover-image !w-[120px] !h-auto"
@@ -89,7 +84,7 @@ const VapiControls = ({ book }: { book: IBook }) => {
               {isActive ? (
                 <Mic className="size-7 text-white" />
               ) : (
-                <MicOff className="size-7 text-[#212a3b]" />
+                <MicOff className="size-7 text-[#1D1D1F]" />
               )}
             </button>
           </div>
@@ -97,10 +92,12 @@ const VapiControls = ({ book }: { book: IBook }) => {
 
         <div className="flex flex-col gap-4 flex-1">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#212a3b] mb-1">
-              {book.title}
+            <h1 className="text-2xl sm:text-3xl font-bold font-sans text-[#1D1D1F] mb-1">
+              {document.title}
             </h1>
-            <p className="text-[#3d485e] font-medium">by {book.author}</p>
+            <p className="text-[#6E6E73] font-medium">
+              Source: {document.source}
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -111,7 +108,7 @@ const VapiControls = ({ book }: { book: IBook }) => {
 
             <div className="vapi-status-indicator">
               <span className="vapi-status-text">
-                Voice: {book.persona || "Daniel"}
+                Voice: {document.persona || "Daniel"}
               </span>
             </div>
 

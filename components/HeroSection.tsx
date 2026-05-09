@@ -9,28 +9,28 @@ const HeroSection = () => {
         <div className="library-hero-content">
           {/* Left Part */}
           <div className="library-hero-text">
-            <h1 className="library-hero-title text-4xl font-serif font-bold">
-              Your Library
+            <h1 className="library-hero-title text-4xl font-sans font-bold">
+              Your Medical Documents
             </h1>
             <p className="library-hero-description">
-              Convert your books into interactive AI conversations.{" "}
+              Understand your medical documents through voice conversations.{" "}
               <br className="hidden md:block" />
-              Listen, learn, and discuss your favorite reads.
+              Upload, ask questions, and get clear explanations.
             </p>
             <Link
-              href="/books/new"
+              href="/documents/new"
               className="library-cta-primary mt-4 flex items-center justify-center"
             >
               <span className="text-3xl font-light mb-1 mr-2">+</span>
-              <span className="text-[#212a3b]">Add new book</span>
+              <span className="text-[#1D1D1F]">Upload Document</span>
             </Link>
           </div>
 
           {/* Center Part - Desktop */}
           <div className="library-hero-illustration-desktop">
             <Image
-              src="/assets/hero-illustration.png"
-              alt="Vintage books and a globe"
+              src="/assets/hero-illustration.svg"
+              alt="Medical documents and voice assistant"
               width={400}
               height={400}
               className="object-contain"
@@ -40,8 +40,8 @@ const HeroSection = () => {
           {/* Center Part - Mobile (Hidden on Desktop) */}
           <div className="library-hero-illustration">
             <Image
-              src="/assets/hero-illustration.png"
-              alt="Vintage books and a globe"
+              src="/assets/hero-illustration.svg"
+              alt="Medical documents and voice assistant"
               width={300}
               height={300}
               className="object-contain"
@@ -57,10 +57,10 @@ const HeroSection = () => {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="library-step-title text-lg font-bold">
-                    Upload PDF
+                    Upload Document
                   </h3>
                   <p className="library-step-description text-gray-500">
-                    Add your book file
+                    Add your medical PDF
                   </p>
                 </div>
               </li>
@@ -70,7 +70,7 @@ const HeroSection = () => {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="library-step-title text-lg font-bold">
-                    AI Processing
+                    AI Analysis
                   </h3>
                   <p className="library-step-description text-gray-500">
                     We analyze the content
@@ -83,10 +83,10 @@ const HeroSection = () => {
                 </div>
                 <div className="flex flex-col">
                   <h3 className="library-step-title text-lg font-bold">
-                    Voice Chat
+                    Ask Questions
                   </h3>
                   <p className="library-step-description text-gray-500">
-                    Discuss with AI
+                    Chat with your document
                   </p>
                 </div>
               </li>

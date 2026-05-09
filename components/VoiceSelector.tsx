@@ -49,14 +49,14 @@ const VoiceSelector = ({
                       <div
                         className={cn(
                           "w-4 h-4 rounded-full border flex items-center justify-center",
-                          isSelected ? "border-[#663820]" : "border-gray-300",
+                          isSelected ? "border-[#0A7E72]" : "border-gray-300",
                         )}
                       >
                         {isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-[#663820]" />
+                          <div className="w-2 h-2 rounded-full bg-[#0A7E72]" />
                         )}
                       </div>
-                      <span className="font-bold text-[#212a3b]">
+                      <span className="font-bold text-[#1D1D1F]">
                         {voice.name}
                       </span>
                     </div>
@@ -98,14 +98,14 @@ const VoiceSelector = ({
                       <div
                         className={cn(
                           "w-4 h-4 rounded-full border flex items-center justify-center",
-                          isSelected ? "border-[#663820]" : "border-gray-300",
+                          isSelected ? "border-[#0A7E72]" : "border-gray-300",
                         )}
                       >
                         {isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-[#663820]" />
+                          <div className="w-2 h-2 rounded-full bg-[#0A7E72]" />
                         )}
                       </div>
-                      <span className="font-bold text-[#212a3b]">
+                      <span className="font-bold text-[#1D1D1F]">
                         {voice.name}
                       </span>
                     </div>

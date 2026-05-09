@@ -1,13 +1,13 @@
 "use server";
 
-import { CreateBook, TextSegment } from "@/types";
+import { CreateDocument, TextSegment } from "@/types";
 import { connectToDatabase } from "@/database/mongoose";
 import { escapeRegex, generateSlug, serializeData } from "@/lib/utils";
-import Book from "@/database/models/book.model";
-import BookSegment from "@/database/models/book-segment.model";
+import Document from "@/database/models/document.model";
+import DocumentSegment from "@/database/models/document-segment.model";
 import mongoose from "mongoose";
 
-export const getAllBooks = async (search?: string) => {
+export const getAllDocuments = async (search?: string) => {
   try {
     await connectToDatabase();
 
@@ -17,15 +17,17 @@ export const getAllBooks = async (search?: string) => {
       const escapedSearch = escapeRegex(search);
       const regex = new RegExp(escapedSearch, "i");
       query = {
-        $or: [{ title: { $regex: regex } }, { author: { $regex: regex } }],
+        $or: [{ title: { $regex: regex } }, { source: { $regex: regex } }],
       };
     }
 
-    const books = await Book.find(query).sort({ createdAt: -1 }).lean();
+    const documents = await Document.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
 
     return {
       success: true,
-      data: serializeData(books),
+      data: serializeData(documents),
     };
   } catch (e) {
     console.error("Error connecting to database", e);
@@ -36,18 +38,18 @@ export const getAllBooks = async (search?: string) => {
   }
 };
 
-export const checkBookExists = async (title: string) => {
+export const checkDocumentExists = async (title: string) => {
   try {
     await connectToDatabase();
 
     const slug = generateSlug(title);
 
-    const existingBook = await Book.findOne({ slug }).lean();
+    const existingDocument = await Document.findOne({ slug }).lean();
 
-    if (existingBook) {
+    if (existingDocument) {
       return {
         exists: true,
-        book: serializeData(existingBook),
+        document: serializeData(existingDocument),
       };
     }
 
@@ -55,7 +57,7 @@ export const checkBookExists = async (title: string) => {
       exists: false,
     };
   } catch (e) {
-    console.error("Error checking book exists", e);
+    console.error("Error checking document exists", e);
     return {
       exists: false,
       error: e,
@@ -63,24 +65,21 @@ export const checkBookExists = async (title: string) => {
   }
 };
 
-export const createBook = async (data: CreateBook) => {
+export const createDocument = async (data: CreateDocument) => {
   try {
     await connectToDatabase();
 
     const slug = generateSlug(data.title);
 
-    const existingBook = await Book.findOne({ slug }).lean();
+    const existingDocument = await Document.findOne({ slug }).lean();
 
-    if (existingBook) {
+    if (existingDocument) {
       return {
         success: true,
-        data: serializeData(existingBook),
+        data: serializeData(existingDocument),
         alreadyExists: true,
       };
     }
-
-    const { getUserPlan } = await import("@/lib/subscription.server");
-    const { PLAN_LIMITS } = await import("@/lib/subscription-constants");
 
     const { auth } = await import("@clerk/nextjs/server");
     const { userId } = await auth();
@@ -89,23 +88,7 @@ export const createBook = async (data: CreateBook) => {
       return { success: false, error: "Unauthorized" };
     }
 
-    const plan = await getUserPlan();
-    const limits = PLAN_LIMITS[plan];
-
-    const bookCount = await Book.countDocuments({ clerkId: userId });
-
-    if (bookCount >= limits.maxBooks) {
-      const { revalidatePath } = await import("next/cache");
-      revalidatePath("/");
-
-      return {
-        success: false,
-        error: `You have reached the maximum number of books allowed for your ${plan} plan (${limits.maxBooks}). Please upgrade to add more books.`,
-        isBillingError: true,
-      };
-    }
-
-    const book = await Book.create({
+    const document = await Document.create({
       ...data,
       clerkId: userId,
       slug,
@@ -114,10 +97,10 @@ export const createBook = async (data: CreateBook) => {
 
     return {
       success: true,
-      data: serializeData(book),
+      data: serializeData(document),
     };
   } catch (e) {
-    console.error("Error creating a book", e);
+    console.error("Error creating a document", e);
 
     return {
       success: false,
@@ -126,22 +109,22 @@ export const createBook = async (data: CreateBook) => {
   }
 };
 
-export const getBookBySlug = async (slug: string) => {
+export const getDocumentBySlug = async (slug: string) => {
   try {
     await connectToDatabase();
 
-    const book = await Book.findOne({ slug }).lean();
+    const document = await Document.findOne({ slug }).lean();
 
-    if (!book) {
-      return { success: false, error: "Book not found" };
+    if (!document) {
+      return { success: false, error: "Document not found" };
     }
 
     return {
       success: true,
-      data: serializeData(book),
+      data: serializeData(document),
     };
   } catch (e) {
-    console.error("Error fetching book by slug", e);
+    console.error("Error fetching document by slug", e);
     return {
       success: false,
       error: e,
@@ -149,20 +132,20 @@ export const getBookBySlug = async (slug: string) => {
   }
 };
 
-export const saveBookSegments = async (
-  bookId: string,
+export const saveDocumentSegments = async (
+  documentId: string,
   clerkId: string,
   segments: TextSegment[],
 ) => {
   try {
     await connectToDatabase();
 
-    console.log("Saving book segments...");
+    console.log("Saving document segments...");
 
     const segmentsToInsert = segments.map(
       ({ text, segmentIndex, pageNumber, wordCount }) => ({
         clerkId,
-        bookId,
+        documentId,
         content: text,
         segmentIndex,
         pageNumber,
@@ -170,18 +153,20 @@ export const saveBookSegments = async (
       }),
     );
 
-    await BookSegment.insertMany(segmentsToInsert);
+    await DocumentSegment.insertMany(segmentsToInsert);
 
-    await Book.findByIdAndUpdate(bookId, { totalSegments: segments.length });
+    await Document.findByIdAndUpdate(documentId, {
+      totalSegments: segments.length,
+    });
 
-    console.log("Book segments saved successfully.");
+    console.log("Document segments saved successfully.");
 
     return {
       success: true,
       data: { segmentsCreated: segments.length },
     };
   } catch (e) {
-    console.error("Error saving book segments", e);
+    console.error("Error saving document segments", e);
 
     return {
       success: false,
@@ -190,27 +175,27 @@ export const saveBookSegments = async (
   }
 };
 
-// Searches book segments using MongoDB text search with regex fallback
-export const searchBookSegments = async (
-  bookId: string,
+// Searches document segments using MongoDB text search with regex fallback
+export const searchDocumentSegments = async (
+  documentId: string,
   query: string,
   limit: number = 5,
 ) => {
   try {
     await connectToDatabase();
 
-    console.log(`Searching for: "${query}" in book ${bookId}`);
+    console.log(`Searching for: "${query}" in document ${documentId}`);
 
-    const bookObjectId = new mongoose.Types.ObjectId(bookId);
+    const documentObjectId = new mongoose.Types.ObjectId(documentId);
 
     // Try MongoDB text search first (requires text index)
     let segments: Record<string, unknown>[] = [];
     try {
-      segments = await BookSegment.find({
-        bookId: bookObjectId,
+      segments = await DocumentSegment.find({
+        documentId: documentObjectId,
         $text: { $search: query },
       })
-        .select("_id bookId content segmentIndex pageNumber wordCount")
+        .select("_id documentId content segmentIndex pageNumber wordCount")
         .sort({ score: { $meta: "textScore" } })
         .limit(limit)
         .lean();
@@ -224,11 +209,11 @@ export const searchBookSegments = async (
       const keywords = query.split(/\s+/).filter((k) => k.length > 2);
       const pattern = keywords.map(escapeRegex).join("|");
 
-      segments = await BookSegment.find({
-        bookId: bookObjectId,
+      segments = await DocumentSegment.find({
+        documentId: documentObjectId,
         content: { $regex: pattern, $options: "i" },
       })
-        .select("_id bookId content segmentIndex pageNumber wordCount")
+        .select("_id documentId content segmentIndex pageNumber wordCount")
         .sort({ segmentIndex: 1 })
         .limit(limit)
         .lean();

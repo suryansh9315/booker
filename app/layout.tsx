@@ -19,9 +19,9 @@ const monaSans = Mona_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Booker",
+  title: "MedVoice",
   description:
-    "Transform your books into interactive AI conversations. Upload PDFs, and chat with your books using voice.",
+    "Understand your medical documents through voice conversations. Upload PDFs and chat with your medical records using AI.",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${ibmPlexSerif.variable} ${monaSans.variable} relative font-sans antialiased`}
+          className={`${monaSans.variable} relative font-sans antialiased`}
         >
           <Navbar />
           {children}

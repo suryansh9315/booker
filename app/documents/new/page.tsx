@@ -4,9 +4,9 @@ const Page = () => {
   return (
     <main className="new-book">
       <section className="flex flex-col gap-5 text-center">
-        <h1 className="page-title-xl">Add a New Book</h1>
+        <h1 className="page-title-xl">Upload a Document</h1>
         <p className="subtitle">
-          Upload a PDF to generate your interactive reading experience
+          Upload a medical PDF to start a voice conversation about it
         </p>
       </section>
 

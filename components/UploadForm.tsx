@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload, ImageIcon } from "lucide-react";
 import { UploadSchema } from "@/lib/zod";
-import { BookUploadFormValues } from "@/types";
+import { DocumentUploadFormValues } from "@/types";
 import {
   Form,
   FormControl,
@@ -26,10 +26,10 @@ import LoadingOverlay from "./LoadingOverlay";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import {
-  checkBookExists,
-  createBook,
-  saveBookSegments,
-} from "@/lib/actions/book.actions";
+  checkDocumentExists,
+  createDocument,
+  saveDocumentSegments,
+} from "@/lib/actions/document.actions";
 import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import { parsePDFFile } from "@/lib/utils";
@@ -44,33 +44,31 @@ const UploadForm = () => {
     setIsMounted(true);
   }, []);
 
-  const form = useForm<BookUploadFormValues>({
+  const form = useForm<DocumentUploadFormValues>({
     resolver: zodResolver(UploadSchema),
     defaultValues: {
       title: "",
-      author: "",
+      source: "",
       persona: "",
       pdfFile: undefined,
       coverImage: undefined,
     },
   });
 
-  const onSubmit = async (data: BookUploadFormValues) => {
+  const onSubmit = async (data: DocumentUploadFormValues) => {
     if (!userId) {
-      return toast.error("Please login to upload books");
+      return toast.error("Please login to upload documents");
     }
 
     setIsSubmitting(true);
 
-    // PostHog -> Track Book Uploads...
-
     try {
-      const existsCheck = await checkBookExists(data.title);
+      const existsCheck = await checkDocumentExists(data.title);
 
-      if (existsCheck.exists && existsCheck.book) {
-        toast.info("Book with same title already exists.");
+      if (existsCheck.exists && existsCheck.document) {
+        toast.info("Document with same name already exists.");
         form.reset();
-        router.push(`/books/${existsCheck.book.slug}`);
+        router.push(`/documents/${existsCheck.document.slug}`);
         return;
       }
 
@@ -118,10 +116,10 @@ const UploadForm = () => {
         coverUrl = uploadedCoverBlob.url;
       }
 
-      const book = await createBook({
+      const document = await createDocument({
         clerkId: userId,
         title: data.title,
-        author: data.author,
+        source: data.source,
         persona: data.persona,
         fileURL: uploadedPdfBlob.url,
         fileBlobKey: uploadedPdfBlob.pathname,
@@ -129,27 +127,29 @@ const UploadForm = () => {
         fileSize: pdfFile.size,
       });
 
-      if (!book.success) {
-        toast.error((book.error as string) || "Failed to create book");
+      if (!document.success) {
+        toast.error(
+          (document.error as string) || "Failed to create document",
+        );
         return;
       }
 
-      if (book.alreadyExists) {
-        toast.info("Book with same title already exists.");
+      if (document.alreadyExists) {
+        toast.info("Document with same name already exists.");
         form.reset();
-        router.push(`/books/${book.data.slug}`);
+        router.push(`/documents/${document.data.slug}`);
         return;
       }
 
-      const segments = await saveBookSegments(
-        book.data._id,
+      const segments = await saveDocumentSegments(
+        document.data._id,
         userId,
         parsedPDF.content,
       );
 
       if (!segments.success) {
-        toast.error("Failed to save book segments");
-        throw new Error("Failed to save book segments");
+        toast.error("Failed to save document segments");
+        throw new Error("Failed to save document segments");
       }
 
       form.reset();
@@ -157,7 +157,7 @@ const UploadForm = () => {
     } catch (error) {
       console.error(error);
 
-      toast.error("Failed to upload book. Please try again later.");
+      toast.error("Failed to upload document. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +176,7 @@ const UploadForm = () => {
             <FileUploader
               control={form.control}
               name="pdfFile"
-              label="Book PDF File"
+              label="Document PDF File"
               acceptTypes={ACCEPTED_PDF_TYPES}
               icon={Upload}
               placeholder="Click to upload PDF"
@@ -202,11 +202,11 @@ const UploadForm = () => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="form-label">Title</FormLabel>
+                  <FormLabel className="form-label">Document Name</FormLabel>
                   <FormControl>
                     <Input
                       className="form-input"
-                      placeholder="ex: Rich Dad Poor Dad"
+                      placeholder="e.g. Blood Test Results, MRI Report, Discharge Summary"
                       {...field}
                       disabled={isSubmitting}
                     />
@@ -216,17 +216,19 @@ const UploadForm = () => {
               )}
             />
 
-            {/* 4. Author Input */}
+            {/* 4. Source Input */}
             <FormField
               control={form.control}
-              name="author"
+              name="source"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="form-label">Author Name</FormLabel>
+                  <FormLabel className="form-label">
+                    Source / Provider
+                  </FormLabel>
                   <FormControl>
                     <Input
                       className="form-input"
-                      placeholder="ex: Robert Kiyosaki"
+                      placeholder="e.g. Dr. Smith, LabCorp, City Hospital"
                       {...field}
                       disabled={isSubmitting}
                     />
@@ -259,7 +261,7 @@ const UploadForm = () => {
 
             {/* 6. Submit Button */}
             <Button type="submit" className="form-btn" disabled={isSubmitting}>
-              Begin Synthesis
+              Upload & Analyze
             </Button>
           </form>
         </Form>

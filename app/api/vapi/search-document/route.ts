@@ -1,34 +1,40 @@
 import { NextResponse } from "next/server";
 
-import { searchBookSegments } from "@/lib/actions/book.actions";
+import { searchDocumentSegments } from "@/lib/actions/document.actions";
 
-// Helper function to process book search logic
-async function processBookSearch(bookId: unknown, query: unknown) {
+// Helper function to process document search logic
+async function processDocumentSearch(documentId: unknown, query: unknown) {
   // Validate inputs before conversion to prevent null/undefined becoming "null"/"undefined" strings
-  if (bookId == null || query == null || query === "") {
-    return { result: "Missing bookId or query" };
+  if (documentId == null || query == null || query === "") {
+    return { result: "Missing documentId or query" };
   }
 
-  // Convert bookId to string
-  const bookIdStr = String(bookId);
+  // Convert documentId to string
+  const documentIdStr = String(documentId);
   const queryStr = String(query).trim();
 
   // Additional validation after conversion
   if (
-    !bookIdStr ||
-    bookIdStr === "null" ||
-    bookIdStr === "undefined" ||
+    !documentIdStr ||
+    documentIdStr === "null" ||
+    documentIdStr === "undefined" ||
     !queryStr
   ) {
-    return { result: "Missing bookId or query" };
+    return { result: "Missing documentId or query" };
   }
 
   // Execute search
-  const searchResult = await searchBookSegments(bookIdStr, queryStr, 3);
+  const searchResult = await searchDocumentSegments(
+    documentIdStr,
+    queryStr,
+    3,
+  );
 
   // Return results
   if (!searchResult.success || !searchResult.data?.length) {
-    return { result: "No information found about this topic in the book." };
+    return {
+      result: "No information found about this topic in the document.",
+    };
   }
 
   const combinedText = searchResult.data
@@ -59,7 +65,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    console.log("Vapi search-book request:", JSON.stringify(body, null, 2));
+    console.log(
+      "Vapi search-document request:",
+      JSON.stringify(body, null, 2),
+    );
 
     // Support multiple Vapi formats
     const functionCall = body?.message?.functionCall;
@@ -71,8 +80,11 @@ export async function POST(request: Request) {
       const { name, parameters } = functionCall;
       const parsed = parseArgs(parameters);
 
-      if (name === "searchBook") {
-        const result = await processBookSearch(parsed.bookId, parsed.query);
+      if (name === "searchDocument") {
+        const result = await processDocumentSearch(
+          parsed.documentId,
+          parsed.query,
+        );
         return NextResponse.json(result);
       }
 
@@ -93,8 +105,11 @@ export async function POST(request: Request) {
       const name = func?.name;
       const args = parseArgs(func?.arguments);
 
-      if (name === "searchBook") {
-        const searchResult = await processBookSearch(args.bookId, args.query);
+      if (name === "searchDocument") {
+        const searchResult = await processDocumentSearch(
+          args.documentId,
+          args.query,
+        );
         results.push({ toolCallId: id, ...searchResult });
       } else {
         results.push({ toolCallId: id, result: `Unknown function: ${name}` });
@@ -103,7 +118,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ results });
   } catch (error) {
-    console.error("Vapi search-book error:", error);
+    console.error("Vapi search-document error:", error);
     return NextResponse.json({
       results: [{ result: "Error processing request" }],
     });
